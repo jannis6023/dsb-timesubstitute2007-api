@@ -7,7 +7,9 @@ const fs = require("fs");
 const {remove} = require("cheerio/lib/api/manipulation");
 const cors = require("cors");
 const app = express()
-const port = 3001
+const config = require('config.json')
+const port = config.port
+const pushAPI = require('pushServer')
 
 app.use(cors())
 
@@ -127,6 +129,23 @@ app.get('/substitutes', ((req, res) => {
                 })
         })
 }))
+app.get('/getDifferences', (req, res) => {
+    const user = req.query.user;
+    const pass = req.query.pass;
+    if(req.query.token === config.token){
+        pushAPI(user, pass)
+            .then(r => {
+                res.send(JSON.stringify(r))
+            })
+            .catch(e => {
+                res.status(500)
+                res.send(JSON.stringify(e))
+            })
+    }else{
+        res.status(401)
+        res.send('{"error": "You are not authenticated - you\'re an idiot..."}')
+    }
+})
 
 app.listen(port, () => {
     console.log(`DSB app listening on port ${port}`)

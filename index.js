@@ -5,8 +5,11 @@ const express = require('express')
 const bodyParser = require("body-parser");
 const fs = require("fs");
 const {remove} = require("cheerio/lib/api/manipulation");
+const cors = require("cors");
 const app = express()
 const port = 3001
+
+app.use(cors())
 
 app.get('/substitutes', ((req, res) => {
     const user = req.query.user;

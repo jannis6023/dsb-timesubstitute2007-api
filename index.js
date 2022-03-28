@@ -74,8 +74,10 @@ app.get('/substitutes', ((req, res) => {
                                     const substituteTable = $(el).find('table.VBlock');
                                     const tableRows = substituteTable.find('tr');
 
+                                    let id = 1
                                     tableRows.each((rowIndex, rowEl) => {
                                         const row = {
+                                            id: id,
                                             course: '',
                                             lesson: '',
                                             teacher: '',
@@ -111,6 +113,7 @@ app.get('/substitutes', ((req, res) => {
                                                 }
                                             })
                                             day.substitutes.push(row)
+                                            id++;
                                         }
                                     })
                                 }

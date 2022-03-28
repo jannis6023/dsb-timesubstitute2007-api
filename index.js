@@ -6,7 +6,7 @@ const bodyParser = require("body-parser");
 const fs = require("fs");
 const {remove} = require("cheerio/lib/api/manipulation");
 const app = express()
-const port = 3000
+const port = 3001
 
 app.get('/substitutes', ((req, res) => {
     const user = req.query.user;

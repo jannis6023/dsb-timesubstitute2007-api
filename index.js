@@ -135,7 +135,7 @@ app.get('/getDifferences', (req, res) => {
     if(req.query.token === config.token){
         pushAPI.default(user, pass)
             .then(r => {
-                res.send(JSON.stringify(r))
+                res.send(r)
             })
             .catch(e => {
                 res.status(500)

@@ -103,7 +103,7 @@ export default function checkDifferences(user: string, pass: string): Promise<Su
                                     const change: SubstituteChange = {
                                         changes: [],
                                         date: d.date,
-                                        newSubstitute: newSub
+                                        oldSubstitute: newSub
                                     }
                                     changes.push(change)
                                 })

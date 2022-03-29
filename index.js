@@ -7,9 +7,9 @@ const fs = require("fs");
 const {remove} = require("cheerio/lib/api/manipulation");
 const cors = require("cors");
 const app = express()
-const config = require('config.json')
+const config = require('./config.json')
 const port = config.port
-const pushAPI = require('pushServer')
+const pushAPI = require('./pushServer')
 
 app.use(cors())
 

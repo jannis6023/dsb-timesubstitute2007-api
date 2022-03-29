@@ -4,6 +4,7 @@ var axios_1 = require("axios");
 var cheerio = require("cheerio");
 var fs = require("fs");
 var _ = require("lodash");
+var DSB = require("dsbapi");
 // Convert to 32bit integer
 function stringToHash(string) {
     var hash = 0;
@@ -36,15 +37,20 @@ function checkDifferences(user, pass) {
                     var oldDay_1 = oldDays.filter(function (fd) { return fd.date === d.date; })[0];
                     // Tag noch da
                     // => Version prüfen
+                    console.log("Lel tag noch da");
                     if (oldDay_1.lastChange !== d.lastChange) {
+                        console.log("Lel0");
                         if (!_.isEqual(oldDay_1.substitutes, d.substitutes)) {
                             // Änderung in Vertretungen
+                            console.log("Lel");
                             d.substitutes.forEach(function (s) {
                                 if (oldDay_1.substitutes.some(function (os) { return _.isEqual(os, s); })) {
                                     // Vertretung noch da, unverändert
+                                    console.log("Vertretung gleich, unverändert");
                                 }
                                 else {
                                     // Vertretung neu oder geändert
+                                    console.log("Vertretung neu oder geändert");
                                     if (oldDay_1.substitutes.some(function (os) { return os.course === s.course && os.teacher === s.teacher; })) {
                                         var oldSub = oldDay_1.substitutes.filter(function (os) { return os.course === s.course && os.teacher === s.teacher; })[0];
                                         changes.push(compareSubstitutes(d, oldSub, s));
@@ -137,117 +143,112 @@ function compareSubstitutes(day, oldSub, newSub) {
 }
 function fetch(user, pass) {
     return new Promise(function (resolve, reject) {
-        axios_1["default"].get('https://mobileapi.dsbcontrol.de/authid?pushid=&password=' + encodeURIComponent(pass) + '&osversion=15.4&bundleid=de.digitales-schwarzes-brett.dsblight&user=' + encodeURIComponent(user) + '&appversion=3.6.2')
-            .then(function (r) {
-            var authId = r.data;
-            axios_1["default"].get("https://mobileapi.dsbcontrol.de/dsbtimetables?authid=" + authId)
+        var dsb = new DSB(user, pass);
+        dsb.fetch()
+            .then(function (data) {
+            var timetables = DSB.findMethodInData('timetable', data);
+            axios_1["default"].get(timetables.data[0].url, {
+                responseEncoding: 'latin1'
+            })
                 .then(function (r) {
-                axios_1["default"].get(r.data[0].Childs[0].Detail, {
-                    responseEncoding: 'latin1'
-                })
-                    .then(function (r) {
-                    var html = r.data;
-                    var $ = cheerio.load(html);
-                    $('script').remove();
-                    $('style').remove();
-                    $('head').remove();
-                    // Für jeden Tag
-                    var days = [];
-                    // iterate over days
-                    $('div').each(function (index, el) {
-                        var day = {
-                            date: '',
-                            lastChange: '',
-                            missingRooms: [],
-                            bitteBeachten: [],
-                            substitutes: []
-                        };
-                        var blocks = $(el).find('table');
-                        // ========================== Datum START ==========================
-                        day.date = $(el).find('table.KBlock.Kopf > tbody > tr:nth-child(1) > td.Datum.ohneumbruch').html() || "";
-                        // ========================== Datum ENDE ==========================
-                        // ========================== LastChange START ==========================
-                        day.lastChange = $(el).find('table.KBlock.Kopf > tbody > tr:nth-child(2) > td.normal.right.ohneumbruch').html() || "";
-                        // ========================== LastChange END ==========================
-                        // ========================== Fehlende Räume START ==========================
-                        if ($(el).remove('table.VorspannBlock').find("table.VorspannBlock:nth-child(2) > tbody > tr > td:nth-child(2)").html() !== null) {
-                            day.missingRooms = ($(el).find("table.VorspannBlock:nth-child(2) > tbody > tr > td:nth-child(2)").html() || "").split(', ');
-                        }
-                        else {
-                            day.missingRooms = [];
-                        }
-                        // ========================== Fehlende Räume ENDE ==========================
-                        // ========================== Bitte beachten START ==========================
-                        if ($(el).find('table.BitteBeachtenBlock > tbody > tr > td:nth-child(2)').html() !== null) {
-                            var bitteBeachten = "";
-                            bitteBeachten = $(el).find('table.BitteBeachtenBlock > tbody > tr > td:nth-child(2)').html() || "";
-                            if (bitteBeachten.split('<br>\n\n<br>\n').length > 0) {
-                                var beachtenTeile = bitteBeachten.split('<br>\n\n<br>\n');
-                                beachtenTeile = beachtenTeile.map(function (t) {
-                                    return t.replace(/\n/g, '');
-                                });
-                                day.bitteBeachten = beachtenTeile;
-                            }
-                        }
-                        else {
-                            day.bitteBeachten = [];
-                        }
-                        // ========================== Bitte beachten ENDE ==========================
-                        // ========================== Vertretungen START ==========================
-                        if ($(el).find('table.VBlock').html() !== null) {
-                            var substituteTable = $(el).find('table.VBlock');
-                            var tableRows = substituteTable.find('tr');
-                            var id_1 = 1;
-                            tableRows.each(function (rowIndex, rowEl) {
-                                var row = {
-                                    id: id_1,
-                                    course: '',
-                                    lesson: '',
-                                    teacher: '',
-                                    substitute: '',
-                                    subject: '',
-                                    room: '',
-                                    description: ''
-                                };
-                                if (rowIndex > 0) {
-                                    $(rowEl).find('td').each(function (colIndex, colEl) {
-                                        switch (colIndex) {
-                                            case 0:
-                                                row.course = $(colEl).text();
-                                                break;
-                                            case 1:
-                                                row.lesson = $(colEl).text();
-                                                break;
-                                            case 2:
-                                                row.teacher = $(colEl).text();
-                                                break;
-                                            case 3:
-                                                row.substitute = $(colEl).text();
-                                                break;
-                                            case 4:
-                                                row.subject = $(colEl).text();
-                                                break;
-                                            case 5:
-                                                row.room = $(colEl).text();
-                                                break;
-                                            case 6:
-                                                row.description = $(colEl).text();
-                                                break;
-                                        }
-                                    });
-                                    day.substitutes.push(row);
-                                    id_1++;
-                                }
+                var html = r.data;
+                var $ = cheerio.load(html);
+                $('script').remove();
+                $('style').remove();
+                $('head').remove();
+                // Für jeden Tag
+                var days = [];
+                // iterate over days
+                $('div').each(function (index, el) {
+                    var day = {
+                        date: '',
+                        lastChange: '',
+                        missingRooms: [],
+                        bitteBeachten: [],
+                        substitutes: []
+                    };
+                    var blocks = $(el).find('table');
+                    // ========================== Datum START ==========================
+                    day.date = $(el).find('table.KBlock.Kopf > tbody > tr:nth-child(1) > td.Datum.ohneumbruch').html() || "";
+                    // ========================== Datum ENDE ==========================
+                    // ========================== LastChange START ==========================
+                    day.lastChange = $(el).find('table.KBlock.Kopf > tbody > tr:nth-child(2) > td.normal.right.ohneumbruch').html() || "";
+                    // ========================== LastChange END ==========================
+                    // ========================== Fehlende Räume START ==========================
+                    if ($(el).remove('table.VorspannBlock').find("table.VorspannBlock:nth-child(2) > tbody > tr > td:nth-child(2)").html() !== null) {
+                        day.missingRooms = ($(el).find("table.VorspannBlock:nth-child(2) > tbody > tr > td:nth-child(2)").html() || "").split(', ');
+                    }
+                    else {
+                        day.missingRooms = [];
+                    }
+                    // ========================== Fehlende Räume ENDE ==========================
+                    // ========================== Bitte beachten START ==========================
+                    if ($(el).find('table.BitteBeachtenBlock > tbody > tr > td:nth-child(2)').html() !== null) {
+                        var bitteBeachten = "";
+                        bitteBeachten = $(el).find('table.BitteBeachtenBlock > tbody > tr > td:nth-child(2)').html() || "";
+                        if (bitteBeachten.split('<br>\n\n<br>\n').length > 0) {
+                            var beachtenTeile = bitteBeachten.split('<br>\n\n<br>\n');
+                            beachtenTeile = beachtenTeile.map(function (t) {
+                                return t.replace(/\n/g, '');
                             });
+                            day.bitteBeachten = beachtenTeile;
                         }
-                        // ========================== Vertretungen ENDE ==========================
-                        days.push(day);
-                    });
-                    resolve(days);
+                    }
+                    else {
+                        day.bitteBeachten = [];
+                    }
+                    // ========================== Bitte beachten ENDE ==========================
+                    // ========================== Vertretungen START ==========================
+                    if ($(el).find('table.VBlock').html() !== null) {
+                        var substituteTable = $(el).find('table.VBlock');
+                        var tableRows = substituteTable.find('tr');
+                        var id_1 = 1;
+                        tableRows.each(function (rowIndex, rowEl) {
+                            var row = {
+                                course: '',
+                                lesson: '',
+                                teacher: '',
+                                substitute: '',
+                                subject: '',
+                                room: '',
+                                description: ''
+                            };
+                            if (rowIndex > 0) {
+                                $(rowEl).find('td').each(function (colIndex, colEl) {
+                                    switch (colIndex) {
+                                        case 0:
+                                            row.course = $(colEl).text();
+                                            break;
+                                        case 1:
+                                            row.lesson = $(colEl).text();
+                                            break;
+                                        case 2:
+                                            row.teacher = $(colEl).text();
+                                            break;
+                                        case 3:
+                                            row.substitute = $(colEl).text();
+                                            break;
+                                        case 4:
+                                            row.subject = $(colEl).text();
+                                            break;
+                                        case 5:
+                                            row.room = $(colEl).text();
+                                            break;
+                                        case 6:
+                                            row.description = $(colEl).text();
+                                            break;
+                                    }
+                                });
+                                day.substitutes.push(row);
+                                id_1++;
+                            }
+                        });
+                    }
+                    // ========================== Vertretungen ENDE ==========================
+                    days.push(day);
                 });
+                resolve(days);
             });
-        })["catch"](function (e) {
-            reject(e);
         });
     });
 }

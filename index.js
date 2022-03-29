@@ -133,7 +133,7 @@ app.get('/getDifferences', (req, res) => {
     const user = req.query.user;
     const pass = req.query.pass;
     if(req.query.token === config.token){
-        pushAPI(user, pass)
+        pushAPI.default(user, pass)
             .then(r => {
                 res.send(JSON.stringify(r))
             })

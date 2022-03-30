@@ -55,6 +55,11 @@ function stringToHash(string: string) {
     return hash;
 }
 
+function parseDate(input: String): Date {
+    var parts = input.match(/(\d+)/g);
+    // note parts[1]-1
+    return new Date(Number(parts[2]), Number(Number(parts[1])-1), Number(parts[0]));
+}
 export default function checkDifferences(user: string, pass: string): Promise<SubstituteChange[]> {
     return new Promise((resolve, reject) => {
         if(!fs.existsSync(user + '.json')){
@@ -110,7 +115,21 @@ export default function checkDifferences(user: string, pass: string): Promise<Su
                             }
                         }
                     }else{
-                        if(index === days.length-1){
+                        if(oldDays.length > 0){
+                            if(parseDate(oldDays[oldDays.length-1].date.split(", ")[1]) < parseDate(d.date.split(", ")[1])){
+                                // Neuer Tag
+                                d.substitutes.forEach(newSub => {
+                                    const change: SubstituteChange = {
+                                        changes: [],
+                                        date: d.date,
+                                        newSubstitute: newSub
+                                    }
+                                    changes.push(change)
+                                })
+                            }else{
+                                // Tag gelöscht, nix machen
+                            }
+                        }else{
                             // Neuer Tag
                             d.substitutes.forEach(newSub => {
                                 const change: SubstituteChange = {

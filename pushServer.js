@@ -18,6 +18,11 @@ function stringToHash(string) {
     }
     return hash;
 }
+function parseDate(input) {
+    var parts = input.match(/(\d+)/g);
+    // note parts[1]-1
+    return new Date(Number(parts[2]), Number(Number(parts[1]) - 1), Number(parts[0]));
+}
 function checkDifferences(user, pass) {
     return new Promise(function (resolve, reject) {
         if (!fs.existsSync(user + '.json')) {
@@ -37,20 +42,15 @@ function checkDifferences(user, pass) {
                     var oldDay_1 = oldDays.filter(function (fd) { return fd.date === d.date; })[0];
                     // Tag noch da
                     // => Version prüfen
-                    console.log("Lel tag noch da");
                     if (oldDay_1.lastChange !== d.lastChange) {
-                        console.log("Lel0");
                         if (!_.isEqual(oldDay_1.substitutes, d.substitutes)) {
                             // Änderung in Vertretungen
-                            console.log("Lel");
                             d.substitutes.forEach(function (s) {
                                 if (oldDay_1.substitutes.some(function (os) { return _.isEqual(os, s); })) {
                                     // Vertretung noch da, unverändert
-                                    console.log("Vertretung gleich, unverändert");
                                 }
                                 else {
                                     // Vertretung neu oder geändert
-                                    console.log("Vertretung neu oder geändert");
                                     if (oldDay_1.substitutes.some(function (os) { return os.course === s.course && os.teacher === s.teacher; })) {
                                         var oldSub = oldDay_1.substitutes.filter(function (os) { return os.course === s.course && os.teacher === s.teacher; })[0];
                                         changes.push(compareSubstitutes(d, oldSub, s));
@@ -70,7 +70,7 @@ function checkDifferences(user, pass) {
                                 var change = {
                                     changes: [],
                                     date: d.date,
-                                    newSubstitute: newSub
+                                    oldSubstitute: newSub
                                 };
                                 changes.push(change);
                             });
@@ -78,7 +78,23 @@ function checkDifferences(user, pass) {
                     }
                 }
                 else {
-                    if (index === days.length - 1) {
+                    if (oldDays.length > 0) {
+                        if (parseDate(oldDays[oldDays.length - 1].date.split(", ")[1]) < parseDate(d.date.split(", ")[1])) {
+                            // Neuer Tag
+                            d.substitutes.forEach(function (newSub) {
+                                var change = {
+                                    changes: [],
+                                    date: d.date,
+                                    newSubstitute: newSub
+                                };
+                                changes.push(change);
+                            });
+                        }
+                        else {
+                            // Tag gelöscht, nix machen
+                        }
+                    }
+                    else {
                         // Neuer Tag
                         d.substitutes.forEach(function (newSub) {
                             var change = {

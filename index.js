@@ -128,7 +128,7 @@ app.get('/substitutes', ((req, res) => {
                     })
             })
     }else{
-        res.send(JSON.parse(fs.readFileSync('demo.json').toString('latin1')))
+        res.send(JSON.parse(fs.readFileSync('demo.json').toString('utf-8')))
     }
 }))
 app.get('/getDifferences', (req, res) => {

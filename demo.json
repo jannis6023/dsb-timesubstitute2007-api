@@ -1,0 +1,101 @@
+[
+  {
+    "substitutes": [
+      {
+        "id": 1,
+        "course": "7A",
+        "lesson": "Di 1.",
+        "teacher": "Maier Max / K",
+        "substitute": "Muster",
+        "subject": "Rel",
+        "room": "A13",
+        "description": "Vertretung"
+      },
+      {
+        "id": 2,
+        "course": "6F",
+        "lesson": "Di 3.",
+        "teacher": "Müller Gudrun / F",
+        "substitute": "Mechter",
+        "subject": "Rel",
+        "room": "D12",
+        "description": "Vertretung"
+      },
+      {
+        "id": 3,
+        "course": "9D",
+        "lesson": "Di 4.",
+        "teacher": "Schacher Mandy / M",
+        "substitute": "",
+        "subject": "M",
+        "room": "D12",
+        "description": "Raumänderung"
+      },
+      {
+        "id": 4,
+        "course": "6H",
+        "lesson": "Di 6.",
+        "teacher": "Schacher Mandy / D",
+        "substitute": "",
+        "subject": "D",
+        "room": "D13",
+        "description": "Raumänderung"
+      }
+    ],
+    "date": "Montag, 25.04.2022",
+    "missingRooms": [],
+    "bitteBeachten": []
+  },
+  {
+    "substitutes": [
+      {
+        "id": 1,
+        "course": "6D",
+        "lesson": "Di 1.",
+        "teacher": "Maier Max / K",
+        "substitute": "Muster",
+        "subject": "Rel",
+        "room": "A13",
+        "description": "Vertretung"
+      },
+      {
+        "id": 2,
+        "course": "5F",
+        "lesson": "Di 3.",
+        "teacher": "Müller Gudrun / F",
+        "substitute": "Mechter",
+        "subject": "Rel",
+        "room": "D12",
+        "description": "Vertretung"
+      },
+      {
+        "id": 3,
+        "course": "11",
+        "lesson": "Di 4.",
+        "teacher": "Schacher Mandy / M",
+        "substitute": "",
+        "subject": "M",
+        "room": "D12",
+        "description": "Raumänderung"
+      },
+      {
+        "id": 4,
+        "course": "12",
+        "lesson": "Di 6.",
+        "teacher": "Schacher Mandy / D",
+        "substitute": "",
+        "subject": "D",
+        "room": "D13",
+        "description": "Raumänderung"
+      }
+    ],
+    "date": "Dienstag, 26.04.2022",
+    "missingRooms": [
+      "U1", "U2", "U3"
+    ],
+    "bitteBeachten": [
+      "Bauarbeiten im Keller: Alle Kellerräume sind nicht verfügbar",
+      "Lehrkräfte Meier und Müller nicht im Haus"
+    ]
+  }
+]
